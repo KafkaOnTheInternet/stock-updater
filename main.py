@@ -9,11 +9,14 @@ import pandas as pd
 
 
 stock_names = []
-deltas = {'1d': 1, '5d': 5}
+deltas = {'1d': 1, '5d': 5, '1y': 365, '5y': 365*5}
 num_seconds_1d = 24*60*60
 base_url = 'https://query1.finance.yahoo.com/v7/finance/download/'
-stock_folder = 'stocks/'
-stock_file = 'stocks.txt'
+stock_folder = 'stocks/' + sys.argv[1] + '/'
+stock_file = 'stocks_full.txt'
+wrong_tickers = []
+
+
 
 def build_url(base_url, ticker, period1, period2):
     interval = '1d'
@@ -30,11 +33,16 @@ def download_stock(url, dirname='stocks/', fname='test'):
     r = requests.get(url, allow_redirects=True)
     fname += '.csv'
     open(dirname+fname, 'wb').write(r.content)
-
-    df = pd.read_csv(dirname+fname, parse_dates=True).drop('Adj Close', axis=1)
-    df['Date'] = pd.to_datetime(df['Date'])
-    df['Date'] = df['Date'].dt.strftime('%m/%d/%y')
-
+    
+    try:
+        df = pd.read_csv(dirname+fname, parse_dates=True)
+        df['Date'] = pd.to_datetime(df['Date'])
+        df['Date'] = df['Date'].dt.strftime('%m/%d/%y')
+    except:
+        print(f'{dirname+fname} doesnt exist, deleting')
+        wrong_tickers.append(fname)
+        os.remove(dirname+fname)
+        return
     df.to_csv(dirname+fname, index=False)
 
     print(f'wrote file {fname}')
@@ -43,7 +51,7 @@ def get_stock_names(fname):
     names = None
     with open(fname) as f:
         names = [i.strip() for i in f.readlines()]
-    print(names)
+#    print(names)
     return names
 
 
@@ -59,13 +67,19 @@ def get_delta():
 def loop():
     tickers = get_stock_names(stock_file)
     delta = get_delta()
-    
+    cnt = 1    
     for ticker in tickers:
+
+        if cnt % 1000 == 0:
+            print('Sleeping for 30s')
+            time.sleep(30)
+            print('Resuming')
+        cnt += 1
         period2 = int(time.time())
         period1 = period2 - num_seconds_1d*deltas[delta]
         url = build_url(base_url, ticker, period1, period2)
-        download_stock(url, fname=ticker)
-
+        download_stock(url, dirname=stock_folder, fname=ticker)
+    print(wrong_tickers)
 '''
 tickers = get_stock_names(stock_file)
 delta = get_delta()
