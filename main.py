@@ -31,11 +31,13 @@ def build_url(base_url, ticker, period1, period2):
 
 def download_stock(url, dirname='stocks/', fname='test'):
     r = requests.get(url, allow_redirects=True)
+    fname_orig = fname
     fname += '.csv'
     open(dirname+fname, 'wb').write(r.content)
     
     try:
         df = pd.read_csv(dirname+fname, parse_dates=True)
+        df.insert(0, 'Name', fname_orig)
         df['Date'] = pd.to_datetime(df['Date'])
         df['Date'] = df['Date'].dt.strftime('%m/%d/%y')
     except:
