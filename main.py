@@ -9,7 +9,7 @@ import pandas as pd
 
 
 stock_names = []
-deltas = {'1d': 1, '5d': 5, '1y': 365, '5y': 365*5, '10y': 365*10}
+deltas = {'1d': 1, '5d': 5, '1y': 365, '5y': 365*5, '10y': 365*10, '20y': 365*20}
 num_seconds_1d = 24*60*60
 base_url = 'https://query1.finance.yahoo.com/v7/finance/download/'
 stock_folder = './stocks/' + sys.argv[1] + '/'
